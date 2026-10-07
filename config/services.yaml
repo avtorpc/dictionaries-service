@@ -1,0 +1,90 @@
+# yaml-language-server: $schema=../vendor/symfony/dependency-injection/Loader/schema/services.schema.json
+
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+# See also https://symfony.com/doc/current/service_container/import.html
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+    kafka_gateway_url: '%env(KAFKA_GATEWAY_URL)%'           # Домен куда шлем сообщеня
+    kafka_mail_send_path_api: 'kafka/mail-send'             # Путь по которому шлем
+
+    dictionary_service_url: '%env(DICTIONARY_SERVICE_URL)%'# Домен по которому работает API
+
+    app.timezone: '%env(APP_TIMEZONE)%'                     # Тайм зона для микросервиса
+    db_schema: '%env(DB_SCHEMA)%'                           # Схема Postgresql с которой работает микросервис
+
+    app.name: '%env(APP_NAME)%'                             # Имя микросервиса
+    app.version: '%env(APP_VERSION)%'                       # Версия сборки
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones
+
+    # Регистрируем все провайдеры справочников в Infrastructure
+    App\Infrastructure\Dictionaries\:
+        resource: '../src/Infrastructure/Dictionaries'
+        tags: ['app.dictionary_provider']   # тег для автоподстановки в DictionaryService
+
+    # Настройка DictionaryService с использованием tagged_iterator
+    App\Application\Dictionaries\DictionaryService:
+        arguments:
+            $providers: !tagged_iterator app.dictionary_provider
+            $cache: '@dictionaries.cache'
+
+    App\Application\Settings\FrontendSettingsService:
+        arguments:
+            $cache: '@dictionaries.cache'
+
+    # ------------ Регистрируем обработчик ошибок----------------
+    App\EventSubscriber\:
+        resource: '../src/EventSubscriber'
+        tags: [ 'kernel.event_subscriber' ]
+
+    # ---------------  Infrastructure: DB, Redis----------------
+    redis:
+        class: Predis\Client
+        factory: ['App\Infrastructure\Registration\RedisFactory', 'create']
+        arguments:
+            - '%env(REDIS_URL)%'
+            - '%env(default::REDIS_PASSWORD)%'
+            - '%env(default::REDIS_SSL_CA)%'
+
+     # ------------------- Redis key builder    ----------------
+    App\Shared\Cache\CacheKeyBuilder:
+        arguments:
+            $version: '%env(DICTIONARY_CACHE_VERSION)%'
+
+    # ------------------- Service name & Version    ------------
+    App\Infrastructure\Application\ApplicationInfo:
+        arguments:
+            $name: '%app.name%'
+            $version: '%app.version%'
+
+    # ------------------- Time checker class    ----------------
+    App\Shared\Time\ClockInterface:
+      alias: App\Shared\Time\SystemClock
+
+    App\Shared\Time\SystemClock:
+      arguments:
+        $timezone: '%app.timezone%'
+
+    # ------------------- DB schema class      ----------------
+    App\Infrastructure\DB\SchemaSqlHelper:
+        arguments:
+            $schema: '%db_schema%'
