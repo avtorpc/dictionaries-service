@@ -38,9 +38,8 @@ final class Version20260326222938 extends AbstractMigration
         // Предзаполнение
         $this->addSql("
             INSERT INTO {$dbSchema}.roles (name, name_genitive, code, is_active) VALUES
-            ('Поставщик', 'поставщика', 'SELLER', TRUE),
-            ('Закупщик', 'закупщика', 'BUYER', TRUE),
-            ('Транспортная компания', 'транспортной компании', 'DELIVERER', TRUE)
+            ('Соискатель', 'соискателя', 'applicant', TRUE),
+            ('Работодатель', 'работодателя', 'employer', TRUE)
         ");
     }
 

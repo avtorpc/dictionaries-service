@@ -36,7 +36,7 @@ final class DictionaryService
             throw new DictionaryNotFoundException(
                 new ExceptionPayload(
                     errorCode: 'DICTIONARY_NOT_FOUND',
-                    message: "Dictionary 'positions/' not found",
+                    message: sprintf("Dictionary '%s' not found", $name),
                     context: ['name' => $name]
                 )
             );

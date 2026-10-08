@@ -68,7 +68,7 @@ services:
      # ------------------- Redis key builder    ----------------
     App\Shared\Cache\CacheKeyBuilder:
         arguments:
-            $version: '%env(DICTIONARY_CACHE_VERSION)%'
+            $version: '%env(DICTIONARY_CACHE_VERSION)%_mesto20261007'
 
     # ------------------- Service name & Version    ------------
     App\Infrastructure\Application\ApplicationInfo:
@@ -88,3 +88,49 @@ services:
     App\Infrastructure\DB\SchemaSqlHelper:
         arguments:
             $schema: '%db_schema%'
+
+    App\Infrastructure\Assessment\ReferenceDictionary:
+        abstract: true
+        autowire: true
+
+    app.dictionary.specializations:
+        parent: App\Infrastructure\Assessment\ReferenceDictionary
+        arguments:
+            $name: 'specializations'
+        tags: ['app.dictionary_provider']
+
+    app.dictionary.grades:
+        parent: App\Infrastructure\Assessment\ReferenceDictionary
+        arguments:
+            $name: 'grades'
+        tags: ['app.dictionary_provider']
+
+    app.dictionary.competencies:
+        parent: App\Infrastructure\Assessment\ReferenceDictionary
+        arguments:
+            $name: 'competencies'
+        tags: ['app.dictionary_provider']
+
+    app.dictionary.technologies:
+        parent: App\Infrastructure\Assessment\ReferenceDictionary
+        arguments:
+            $name: 'technologies'
+        tags: ['app.dictionary_provider']
+
+    app.dictionary.specialization-competencies:
+        parent: App\Infrastructure\Assessment\ReferenceDictionary
+        arguments:
+            $name: 'specialization-competencies'
+        tags: ['app.dictionary_provider']
+
+    app.dictionary.criteria:
+        parent: App\Infrastructure\Assessment\ReferenceDictionary
+        arguments:
+            $name: 'criteria'
+        tags: ['app.dictionary_provider']
+
+    app.dictionary.criterion-competencies:
+        parent: App\Infrastructure\Assessment\ReferenceDictionary
+        arguments:
+            $name: 'criterion-competencies'
+        tags: ['app.dictionary_provider']
